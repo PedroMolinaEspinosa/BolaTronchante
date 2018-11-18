@@ -1,0 +1,272 @@
+<!DOCTYPE <html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="author" content="Pedro Molina, GitHub: https://github.com/PedroMolinaEspinosa">
+        <title>Bola Tronchante</title>    
+        <style>
+            *{
+                padding : 0; 
+                margin : 0;
+             }
+             canvas{
+                 background: #eee;
+                 display: block;
+                 margin: 0 auto;
+                 margin-top: 20px;
+
+
+             }
+        </style>
+
+
+    </head>
+    <body>
+        <canvas id="myCanvas" width="483" height="320"></canvas>
+        <script>
+            //JavaScript Code
+            
+
+            //
+            //--------------VARIABLES----------------------
+            //
+
+
+
+            //Coge el elemento canvas definido fuera del script para manipularlo
+            var canvas = document.getElementById("myCanvas");
+
+            //Obtiene un objeto canvasRenderingContext2D que representa un contexto de renderizado en 2 dimensiones.
+            var ctx = canvas.getContext("2d");
+
+            //Situación inicial de la bola
+            var x = canvas.width/2;
+            var y = canvas.height-30;
+
+            //Variables para controlar el movimiento de la pelota progresivamente  
+            var dx = 2;
+            var dy = -2;   
+
+            //Control de puntuación
+            var score = 0;
+            var scoreLvl1 = 50;
+            var scoreLvl1Items = 15;
+
+            //Radio de la bola 
+            var ballRadius = 10; 
+
+            //Definición del tamaño y posición horizontal de la paleta
+            var paddleHeight = 10;
+            var paddleWidth = 75;
+            var paddleX = (canvas.width - paddleWidth)/2;
+
+            //Variables para saber si se pulsa un botón u otro
+            var rightPressed = false;
+            var leftPressed = false;
+
+            //Gestión de vidas
+            var lives = 3;
+            //Variables d elos ladrillos
+            var brickRowCount = 3;
+            var brickColumnCount = 5;
+            var brickWidth = 75;
+            var brickHeight = 20;
+            var brickPadding = 10;
+            var brickOffsetTop = 30;
+            var brickOffsetLeft = 30;
+
+            var bricks = [];
+            for(c=0; c< brickColumnCount; c++) {
+                bricks[c] = [];
+                for(r=0; r< brickRowCount; r++) {
+                    bricks[c][r] = { x: 0, y: 0 , status : 1};
+                }
+            }
+
+            
+            
+            //
+            //--------------FUNCIONES----------------------
+            //
+
+            //Función que dibuja la paleta
+            function drawPaddle(){
+                ctx.beginPath();
+                ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+                ctx.fillStyle = "#0095DD";
+                ctx.fill();
+                ctx.closePath();
+
+
+
+            }
+
+            //Función dibujar vidas
+            function drawLives() {
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "#0095DD";
+                ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+            }
+
+            //Función que dibuja la puntuación
+            function drawScore(){
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "#0095DD";
+                ctx.fillText("Score: "+score, 8, 20);
+            }
+
+            //Función que detecta colisiones con los ladrillos
+            function collisionDetection(){
+                for(c=0; c<brickColumnCount; c++) {
+                    for(r=0; r<brickRowCount; r++) {
+
+                        var b = bricks[c][r];
+                        if(b.status == 1){
+                            if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
+                                dy = -dy;
+                                b.status = 0;
+                                score += scoreLvl1;
+
+                                if(score == brickRowCount*brickColumnCount*scoreLvl1) {
+                                    alert("YOU WIN, CONGRATULATIONS!");
+                                    document.location.reload();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Función que dibuja los ladrillos
+            function drawBricks(){
+                for(c = 0; c < brickColumnCount; c++){
+                    for(r = 0; r < brickRowCount; r++){
+                        if(bricks[c][r].status == 1){
+                            var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
+                            var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
+                            bricks[c][r].x = brickX;
+                            bricks[c][r].y = brickY;
+                            ctx.beginPath();
+                            ctx.rect(bricks[c][r].x ,bricks[c][r].y ,brickWidth, brickHeight);
+                            ctx.fillStyle = "#0095DD";
+                            ctx.fill();
+                            ctx.closePath();
+                        }
+                    }
+                }
+            }
+            
+            //Función que se encarga de dibujar la bola
+            function drawBall(){
+                ctx.beginPath();
+                ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+                ctx.fillStyle = "#0095DD";
+                ctx.fill();
+                ctx.closePath();
+
+                           
+            }
+            
+            //Función de dibujo y movimiento.
+            function draw(){
+                //Limpia la estela del recorrido de la bola
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                //Pinta las vidas
+                drawLives();
+
+                //Pinta la paleta
+                drawPaddle();
+
+                //Pintar puntuación
+                drawScore();
+
+                //Detector de colisiones 
+                collisionDetection();
+
+                //Pinta los ladrillos
+                drawBricks();
+
+                //Pinta la bola
+                drawBall();
+
+                //Detecta los bordes y rebota la bola
+                if(y + dy < ballRadius){
+                    dy = -dy;
+                }else if(y == canvas.height - ballRadius){
+                   if(x > paddleX && x < paddleX + paddleWidth) {
+                        dy = -dy;
+                    }else if(lives > 0){
+                        lives--;
+                        x = canvas.width/2;
+                        y = canvas.height-30;
+                        dx = 2;
+                        dy = -2;
+                        paddleX = (canvas.width-paddleWidth)/2;
+                    }else{
+                        alert("GAME OVER");
+                        document.location.reload();
+                    }   
+                }
+                if(x + dx < ballRadius || x + dx > canvas.width - ballRadius){
+                    dx = -dx;
+                }
+
+                //Añade un diferencial por cada iteracción para generar movimiento
+                x += dx;
+                y += dy;
+
+                //Comprobamos si está pulsada la flecha derecha o izquierda y controlamos que no salga de los limites
+                if(rightPressed && paddleX < canvas.width - paddleWidth -7){
+                    paddleX += 7;
+
+                }else if(leftPressed && paddleX > 7 ){
+                    paddleX += -7;
+
+                }
+                
+                requestAnimationFrame(draw);
+            }
+            
+
+            //Definición de escuchadores para detectar pulsación de los botones del ratón
+            document.addEventListener("keydown", keyDownHandler, false);
+            document.addEventListener("keyup", keyUpHandler, false);
+            document.addEventListener("mousemove", mouseMoveHandler, false);
+
+            //
+
+            function keyDownHandler(e){
+                if(e.keyCode == 39){
+                    rightPressed = true;
+                }
+                else if(e.keyCode == 37){
+                    leftPressed = true;
+                }
+            }
+            function keyUpHandler(e) {
+                if(e.keyCode == 39) {
+                    rightPressed = false;
+                }
+                else if(e.keyCode == 37) {
+                    leftPressed = false;
+                }
+            }
+            function mouseMoveHandler(e) {
+                var relativeX = e.clientX - canvas.offsetLeft;
+                if(relativeX > 0 && relativeX < canvas.width) {
+                    paddleX = relativeX - paddleWidth/2;
+                }
+            }
+
+            //Hace que el método se ejecute como un bucle y cada 10 milisegundos
+            //setInterval(draw, 10);
+
+            //
+            draw();
+        </script>
+
+
+    </body>
+
+</html>>
